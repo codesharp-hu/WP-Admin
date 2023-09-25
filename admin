@@ -1,0 +1,47 @@
+server {
+        root /var/www/wordpress;
+
+        index index.php;
+
+        server_name admin.example.com;
+        
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        set $tologin 1;
+
+        if ($http_cookie ~* "wordpress_logged_in") {
+                set $tologin 0;
+        }
+
+        if ($request_uri ~* "/wp-admin|/wp-login") {
+                set $tologin 0;
+        }
+
+        if ($tologin) {
+                return 302 https://admin.example.com/wp-admin;
+        }
+
+        location ~ \.(css|js)$ {
+                subs_filter_types text/css application/javascript;
+                subs_filter example.com admin.example.com;
+                try_files $uri $uri/ =404;
+        }
+
+        location / {
+                try_files $uri $uri/ /index.php?$args;
+        }
+
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+                subs_filter_types text/html;
+                subs_filter example.com admin.example.com;
+                subs_filter admin.example.com/wp-includes example.com/wp-includes;
+                subs_filter admin.example.com/wp-content example.com/wp-content;
+                subs_filter value="https://admin.example.com/" value="https://example.com/";
+                subs_filter value="https://admin.example.com" value="https://example.com";
+        }
+}
