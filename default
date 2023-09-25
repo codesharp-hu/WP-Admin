@@ -1,0 +1,36 @@
+server {
+        root /var/www/wordpress;
+
+        index index.php;
+
+        server_name example.com;
+        
+        listen 80 default_server;
+        listen [::]:80 default_server;
+  
+        add_header Access-Control-Allow-Origin https://admin.example.com;
+
+        location / {
+                try_files $uri $uri/ /index.php?$args;
+        }
+
+        set $redirect_to_admin 0;
+
+        if ($request_uri ~* "/wp-admin|/wp-login") {
+                set $redirect_to_admin 1;
+        }
+
+        if ($request_uri ~* "/wp-admin/admin-ajax.php") {
+                set $redirect_to_admin 0;
+        }
+
+        if ($redirect_to_admin) {
+                return 302 https://admin-test.fitness-index.hu$request_uri;
+        }
+
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+}
