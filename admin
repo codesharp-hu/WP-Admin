@@ -5,8 +5,8 @@ server {
 
         server_name admin.example.com;
         
-        listen 80 default_server;
-        listen [::]:80 default_server;
+        listen 80;
+        listen [::]:80;
 
         set $tologin 1;
 
